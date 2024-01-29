@@ -13,8 +13,8 @@ router.get('/', async (req, res) => {
       res.status(500).json({ error: 'Internal Server Error', details: err.message });
     }
   });
-  // get vendor by id
-router.get('/:id', async (req, res) => {
+  // get vendor by email
+router.get('/:email', async (req, res) => {
     try {
       const vendor = await Vendor.findById(req.params.id);
   

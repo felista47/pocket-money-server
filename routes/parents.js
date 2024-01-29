@@ -14,8 +14,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-// get by id
-router.get('/:id', async (req, res) => {
+// get by email
+router.get('/email', async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: 'Invalid ID format' });
