@@ -15,15 +15,14 @@ router.get('/', async (req, res) => {
 });
 
 // get by email
-router.get('/email', async (req, res) => {
+router.get('/:email', async (req, res) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ error: 'Invalid ID format' });
-    }
-    const parent = await Parent.findById(req.params.id);
+    const parent = await Parent.findOne({ email: req.params.emailAddress});
+
     if (!parent) {
       return res.status(404).json({ error: 'Parent not found' });
     }
+
     res.json(parent);
   } catch (err) {
     console.error(err);
@@ -78,9 +77,9 @@ router.post('/', async (req, res) => {
 
 
 //  update parent details
-router.patch('/:id', async (req, res) => {
+router.patch('/:email', async (req, res) => {
   try {
-    const parent = await Parent.findById(req.params.id);
+    const parent = await Parent.findById(req.params.email);
 
     if (!parent) {
       return res.status(404).json({ error: 'Parent not found' });

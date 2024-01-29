@@ -14,9 +14,9 @@ router.get('/', async (req, res) => {
     }
   });
   // get vendor by email
-router.get('/:email', async (req, res) => {
+  router.get('/:email', async (req, res) => {
     try {
-      const vendor = await Vendor.findById(req.params.id);
+      const vendor = await Vendor.findOne({ email: req.params.emailAddress });
   
       if (!vendor) {
         return res.status(404).json({ error: 'Vendor not found' });
@@ -28,6 +28,7 @@ router.get('/:email', async (req, res) => {
       res.status(500).json({ error: 'Internal Server Error', details: err.message });
     }
   });
+  
 // Create a new vendor instance
 
 router.post('/', async (req, res) => {
@@ -65,9 +66,9 @@ router.post('/', async (req, res) => {
 
 
 // update vendor details
-router.patch('/:id', async (req, res) => {
+router.patch('/:email', async (req, res) => {
     try {
-      const vendor = await Vendor.findById(req.params.id);
+      const vendor = await Vendor.findById(req.params.emailAddress);
   
       if (!vendor) {
         return res.status(404).json({ error: 'vender not found' });
