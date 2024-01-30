@@ -4,39 +4,38 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+const createToken = (_id) => {
+    return jwt.sign({_id}, process.env.SECRET, { expiresIn: '3d' })
+  }
 // Signup route
 router.post('/signup', async (req, res) => {
+    const {email, password} = req.body
+
     try {
-        const { username, password } = req.body;
-        const user = new User({ username, password });
-        await user.save();
-        res.status(201).json({ message: 'User registered successfully' });
+      const user = await User.signup(email, password)
+  
+      // create a token
+      const token = createToken(user._id)
+  
+      res.status(200).json({email, token})
     } catch (error) {
-        res.status(500).json({ error: 'Internal Server Error', details: error.message });
+      res.status(400).json({error: error.message})
     }
 });
 
 // Login route
 router.post('/login', async (req, res) => {
+    const {email, password} = req.body
+
     try {
-        const { username, password } = req.body;
-        const user = await User.findOne({ username });
-
-        if (!user) {
-            return res.status(401).json({ error: 'Invalid username or password' });
-        }
-
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-
-        if (!isPasswordValid) {
-            return res.status(401).json({ error: 'Invalid username or password' });
-        }
-
-        const token = jwt.sign({ userId: user._id }, 'your-secret-key', { expiresIn: '1h' });
-
-        res.json({ token });
+      const user = await User.login(email, password)
+  
+      // create a token
+      const token = createToken(user._id)
+  
+      res.status(200).json({email, token})
     } catch (error) {
-        res.status(500).json({ error: 'Internal Server Error', details: error.message });
+      res.status(400).json({error: error.message})
     }
 });
 

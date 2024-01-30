@@ -9,7 +9,7 @@ connectDB();
 app.use(express.json());
  
 const userRouter = require('./routes/users')
-app.use('/',userRouter)
+app.use('/user',userRouter)
 
 const vendorRouter = require('./routes/vendors')
 app.use('/vendor',vendorRouter)
