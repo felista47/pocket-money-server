@@ -2,7 +2,11 @@ const express = require('express')
 const router = express.Router()
 const Parent = require('../models/parent')
 const mongoose = require('mongoose')
+const jwt = require('jsonwebtoken');
 
+const createToken = (_id) => {
+  return jwt.sign({_id}, process.env.SECRET, { expiresIn: '3d' })
+}
 // get all parents
 router.get('/', async (req, res) => {
   try {
@@ -32,7 +36,7 @@ router.get('/:email', async (req, res) => {
 
 // add a new parent
 router.post('/', async (req, res) => {
-  const { id, name, contactInfo, homeAddress, parentalDetails, children, financialInformation } = req.body;
+  const { id, name, contactInfo, homeAddress,password, parentalDetails, children, financialInformation } = req.body;
 
   const parent = new Parent({
     personalInfo: {
@@ -40,9 +44,10 @@ router.post('/', async (req, res) => {
       name: name,
       contactInfo: {
         phoneNumber: contactInfo.phoneNumber,
-        emailAddress: contactInfo.emailAddress
+        email: contactInfo.email
       },
-      homeAddress: homeAddress
+      homeAddress: homeAddress,
+      password:password
     },
     parentalDetails: {
       parentRelationship: parentalDetails.parentRelationship
@@ -75,6 +80,20 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.post('/signUp', async (req, res) => {
+  const {email, password} = req.body
+
+  try {
+    const parent = await Parent.signup(email, password)
+
+    // create a token
+    const token = createToken(parent._id)
+
+    res.status(200).json({email, token,parent})
+  } catch (error) {
+    res.status(400).json({error: error.message})
+  }
+}); 
 
 //  update parent details
 router.patch('/:email', async (req, res) => {
@@ -97,5 +116,26 @@ router.patch('/:email', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error', details: err.message });
   }
 });
+
+
+
+// Login route
+router.post('/login', async (req, res) => {
+    const {email, password} = req.body
+
+    try {
+      const parent = await Parent.login(email, password)
+  
+      // create a token
+      const token = createToken(parent._id)
+  
+      res.status(200).json({email, token})
+    } catch (error) {
+      res.status(400).json({error: error.message})
+    }
+});
+
+
+
 
 module.exports = router

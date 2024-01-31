@@ -1,17 +1,16 @@
 const mongoose = require('mongoose')
+const bcrypt = require('bcryptjs')
+const validator = require('validator')
 
 const childSchema = new mongoose.Schema({
   childFullName: {
     type: String,
-    required: true
   },
   gradeClass: {
     type: String,
-    required: true
   },
   studentID: {
     type: String,
-    required: true
   },
   financialInformation: {
     allowanceBalAmount: {
@@ -20,12 +19,11 @@ const childSchema = new mongoose.Schema({
     },
     allowanceAmount: {
       type: Number,
-      required: true
     },
     allowanceFrequency: {
       type: String,
       enum: ['Weekly', 'Monthly'],
-      required: true
+      
     }
   },
 });
@@ -34,32 +32,26 @@ const parentSchema = new mongoose.Schema({
   personalInfo: {
     id: {
       type: String,
-      required: true,
     },
     name: {
       type: String,
-      required: true
+      required: false,
     },
-    contactInfo: {
-      phoneNumber: {
-        type: String,
-        required: true
-      },
-      emailAddress: {
-        type: String,
-        required: true
-      }
+    phoneNumber: {
+      type: String,
+      required: false,    
     },
     homeAddress: {
       type: String,
-      required: true
-    }
+      required: false,
+    },
+    
   },
   parentalDetails: {
     parentRelationship: {
       type: String,
       enum: ['Father', 'Mother'],
-      required: true
+      
     },
   },
   children: [childSchema], // Array of child documents
@@ -70,15 +62,80 @@ const parentSchema = new mongoose.Schema({
     },
     allowanceAmount: {
       type: Number,
-      required: true
+      
     },
     allowanceFrequency: {
       type: String,
       enum: ['Weekly', 'Monthly'],
-      required: true
+      
     }
+  },
+ userAccountInfo:{
+  email: {
+    type: String,
+    required: true
   }
- 
+  ,
+  password: {
+    type: String,
+    required: true,
+
+  }
+ }
 });
+
+// static signup method
+parentSchema.statics.signup = async function(email, password) {
+
+  // validation
+  if (!email || !password) {
+    throw Error('All fields must be filled')
+  }
+  if (!validator.isEmail(email)) {
+    throw Error('Email not valid')
+  }
+  if (!validator.isStrongPassword(password)) {
+    throw Error('Password not strong enough')
+  }
+
+  const exists = await this.findOne({ email })
+
+  if (exists) {
+    throw Error('User with this email already exists');
+  }
+
+  const salt = await bcrypt.genSalt(10)
+  const hash = await bcrypt.hash(password, salt)
+
+    const parent = await this.create({
+      userAccountInfo: { email, password: hash }})
+  return parent
+}
+
+// static login method
+parentSchema.statics.login = async function(email, password) {
+  try {
+    if (!email || !password) {
+      throw new Error('All fields must be filled');
+    }
+
+    const parent = await this.findOne({ 'userAccountInfo.email': email });
+    if (!parent) {
+      throw new Error('Incorrect email or password');
+    }
+
+    const match = await bcrypt.compare(password, parent.userAccountInfo.password);
+    if (!match) {
+      throw new Error('Incorrect email or password');
+    }
+
+    return { success: true, parent };
+  } catch (error) {
+    console.error(error);
+    throw new Error('Internal Server Error',error);
+  }
+};
+
+
 
 module.exports = mongoose.model('Parent', parentSchema);
