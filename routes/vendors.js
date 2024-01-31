@@ -1,7 +1,12 @@
 const Vendor = require('../models/vendor');
 const express = require('express')
 const router = express.Router()
+const mongoose = require('mongoose')
+const jwt = require('jsonwebtoken');
 
+const createToken = (_id) => {
+  return jwt.sign({_id}, process.env.SECRET, { expiresIn: '3d' })
+}
 
 // get all vendors
 router.get('/', async (req, res) => {
@@ -64,7 +69,35 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.post('/signUp', async (req, res) => {
+  const {email, password} = req.body
 
+  try {
+    const vendor = await Vendor.signup(email, password)
+
+    // create a token
+    const token = createToken(vendor._id)
+
+    res.status(200).json({email, token,vendor})
+  } catch (error) {
+    res.status(400).json({error: error.message})
+  }
+}); 
+
+router.post('/login', async (req, res) => {
+  const {email, password} = req.body
+
+  try {
+    const vendor = await Vendor.login(email, password)
+
+    // create a token
+    const token = createToken(vendor._id)
+
+    res.status(200).json({email, token})
+  } catch (error) {
+    res.status(400).json({error: error.message})
+  }
+});
 // update vendor details
 router.patch('/:email', async (req, res) => {
     try {

@@ -8,8 +8,7 @@ connectDB();
 // Middleware to parse JSON
 app.use(express.json());
  
-const userRouter = require('./routes/users')
-app.use('/user',userRouter)
+
 
 const vendorRouter = require('./routes/vendors')
 app.use('/vendor',vendorRouter)
