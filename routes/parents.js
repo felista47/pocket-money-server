@@ -3,6 +3,7 @@ const router = express.Router()
 const Parent = require('../models/parent')
 const mongoose = require('mongoose')
 const jwt = require('jsonwebtoken');
+const authMiddleware = require('../middleware/authMiddleware');
 
 const createToken = (_id) => {
   return jwt.sign({_id}, process.env.SECRET, { expiresIn: '3d' })
@@ -117,7 +118,9 @@ router.patch('/:email', async (req, res) => {
   }
 });
 
-
+router.get('/check', authMiddleware, (req, res) => {
+  res.json({ user: req.user });
+});
 
 // Login route
 router.post('/login', async (req, res) => {
