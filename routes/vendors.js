@@ -101,7 +101,7 @@ router.post('/login', async (req, res) => {
 // update vendor details
 router.patch('/:email', async (req, res) => {
     try {
-      const vendor = await Vendor.findById(req.params.emailAddress);
+      const vendor = await Vendor.findById({ 'userAccountInfo.email': req.params.email });
   
       if (!vendor) {
         return res.status(404).json({ error: 'vender not found' });

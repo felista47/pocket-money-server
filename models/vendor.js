@@ -6,18 +6,19 @@ const vendorSchema = new mongoose.Schema({
   personalInfo: {
     id: {
       type: String,
+      default:''
     },
     name: {
       type: String,
-      required: false,
+      default:''
     },
     phoneNumber: {
       type: String,
-      required: false,    
+      default:''
     },
     homeAddress: {
       type: String,
-      required: false,
+      default:''
     },
     
   },
@@ -33,28 +34,33 @@ const vendorSchema = new mongoose.Schema({
    },
   servicesProvided: [
     {
-      type: String
-      
+      type: String,
+      default:''
+
     }
   ],
   paymentDetails: {
     tillName: {
       type: String,
-      enum: ['M-PESA', 'Other']
-      
+      enum: ['M-PESA', 'Other'],
+      default:null
     },
     tillHolderName: {
-      type: String
-      
+      type: String,
+      default:''
+
     },
     tillNumber: {
-      type: String
-      
+      type: String,
+      default:''
+
     },
 
   },
   additionalNotes: {
-    type: String
+    type: String,
+    default:''
+
   },
   active: {
     type: Boolean,
