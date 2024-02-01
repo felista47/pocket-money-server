@@ -96,18 +96,25 @@ router.post('/signUp', async (req, res) => {
   }
 }); 
 
-//  update parent details
 router.patch('/:email', async (req, res) => {
   try {
-    const parent = await Parent.findById(req.params.email);
+    const parent = await Parent.findOne({ 'userAccountInfo.email': req.params.email });
 
     if (!parent) {
       return res.status(404).json({ error: 'Parent not found' });
     }
 
-    // Update only the 'sub' field if it exists in the request body
-    if (req.body.sub !== undefined) {
-      parent.sub = req.body.sub;
+    // Update only the fields that are provided in the request body
+    if (req.body.personalInfo) {
+      Object.assign(parent.personalInfo, req.body.personalInfo);
+    }
+
+    if (req.body.parentalDetails) {
+      Object.assign(parent.parentalDetails, req.body.parentalDetails);
+    }
+
+    if (req.body.financialInformation) {
+      Object.assign(parent.financialInformation, req.body.financialInformation);
     }
 
     const updatedParent = await parent.save();
@@ -121,7 +128,6 @@ router.patch('/:email', async (req, res) => {
 router.get('/check', authMiddleware, (req, res) => {
   res.json({ user: req.user });
 });
-
 // Login route
 router.post('/login', async (req, res) => {
     const {email, password} = req.body

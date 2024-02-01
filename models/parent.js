@@ -5,25 +5,40 @@ const validator = require('validator')
 const childSchema = new mongoose.Schema({
   childFullName: {
     type: String,
+          default: '',
+
+
   },
   gradeClass: {
     type: String,
+          default: '',
+
+
   },
   studentID: {
     type: String,
+          default: '',
+
+
   },
   financialInformation: {
     allowanceBalAmount: {
       type: Number,
-      required: false,
+            default:null,
+
     },
     allowanceAmount: {
       type: Number,
+            default: null,
+
+
     },
     allowanceFrequency: {
       type: String,
       enum: ['Weekly', 'Monthly'],
-      
+            default: '',
+
+
     }
   },
 });
@@ -32,42 +47,55 @@ const parentSchema = new mongoose.Schema({
   personalInfo: {
     id: {
       type: String,
+            default: '',
+
+
     },
     name: {
       type: String,
-      required: false,
+            default: '',
+
     },
     phoneNumber: {
       type: String,
-      required: false,    
+            default: '',
+    
     },
     homeAddress: {
       type: String,
-      required: false,
+            default: '',
+
     },
     
   },
   parentalDetails: {
     parentRelationship: {
       type: String,
-      enum: ['Father', 'Mother'],
-      
+      enum: ['Father', 'Mother','Guardian'],
+            default: null,
+
+
     },
   },
   children: [childSchema], // Array of child documents
   financialInformation: {
     allowanceBalAmount: {
       type: Number,
-      required: false,
+            default: null,
+
     },
     allowanceAmount: {
       type: Number,
-      
+            default: null,
+
+
     },
     allowanceFrequency: {
       type: String,
       enum: ['Weekly', 'Monthly'],
-      
+            default: null,
+
+
     }
   },
  userAccountInfo:{
@@ -80,7 +108,8 @@ const parentSchema = new mongoose.Schema({
     type: String,
     required: true,
 
-  }
+  } 
+
  }
 });
 
@@ -107,8 +136,9 @@ parentSchema.statics.signup = async function(email, password) {
   const salt = await bcrypt.genSalt(10)
   const hash = await bcrypt.hash(password, salt)
 
-    const parent = await this.create({
-      userAccountInfo: { email, password: hash }})
+  const parent = await this.create({
+    userAccountInfo: { email, password: hash },
+  });
   return parent
 }
 
