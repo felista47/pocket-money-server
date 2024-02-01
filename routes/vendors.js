@@ -21,7 +21,7 @@ router.get('/', async (req, res) => {
   // get vendor by email
   router.get('/:email', async (req, res) => {
     try {
-      const vendor = await Vendor.findOne({ email: req.params.emailAddress });
+      const vendor = await Vendor.findOne({ 'userAccountInfo.email': req.params.email });
   
       if (!vendor) {
         return res.status(404).json({ error: 'Vendor not found' });

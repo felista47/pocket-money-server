@@ -21,8 +21,8 @@ router.get('/', async (req, res) => {
 // get by email
 router.get('/:email', async (req, res) => {
   try {
-    const parent = await Parent.findOne({ email: req.params.emailAddress});
-
+    const parent = await Parent.findOne({ 'userAccountInfo.email': req.params.email });
+ console.log(parent)
     if (!parent) {
       return res.status(404).json({ error: 'Parent not found' });
     }
