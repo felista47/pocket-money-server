@@ -1,12 +1,11 @@
 const express = require('express')
 const router = express.Router()
 const Parent = require('../models/parent')
-const mongoose = require('mongoose')
 const jwt = require('jsonwebtoken');
-const authMiddleware = require('../middleware/authMiddleware');
+const tokenBlacklist = new Set();
 
 const createToken = (_id) => {
-  return jwt.sign({_id}, process.env.SECRET, { expiresIn: '3d' })
+  return jwt.sign({_id}, process.env.SECRET, { expiresIn: '5m' })
 }
 // get all parents
 router.get('/', async (req, res) => {
@@ -125,9 +124,26 @@ router.patch('/:email', async (req, res) => {
   }
 });
 
-router.get('/check', authMiddleware, (req, res) => {
-  res.json({ user: req.user });
+router.post('/signOut', async (req, res) => {
+  try {
+    if (req.headers.authorization) {
+      const token = req.headers.authorization;
+      if (!token) {
+        return res.status(401).json({ success: false, message: 'Authorization fail!' });
+      }
+      
+        tokenBlacklist.add(token);
+      
+  
+      res.json({ success: true, message: 'Sign out successfully!' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
+
+
 // Login route
 router.post('/login', async (req, res) => {
     const {email, password} = req.body
