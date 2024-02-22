@@ -1,6 +1,11 @@
 const mongoose = require('mongoose')
 
 const productSchema = new mongoose.Schema({
+  vendor: {
+    type: String,
+    ref: 'Vendor',
+    required: true
+  },
   productImage: {
     type: String,
     required: true

@@ -22,6 +22,20 @@ const vendorSchema = new mongoose.Schema({
     },
     
   },
+  shopInfo:{
+    shopName:{
+      type:String,
+      default:''
+    } ,
+    location:{
+      type:String,
+      default:''
+    } ,
+    contactInfo:{
+      type:String,
+      default:''
+    }
+  },
   userAccountInfo:{
     email: {
       type: String,

@@ -42,9 +42,10 @@ router.get('/category/:category', async (req, res) => {
 });
 // add a new product
 router.post('/', async (req, res) => {
-  const {  productImage,productName,productDescription,productCategory,productAmount,} = req.body;
+  const { vendorId, productImage,productName,productDescription,productCategory,productAmount,} = req.body;
 
   const product = new Product({
+    vendor:vendorId,
     productImage,
       productName,
       productDescription,

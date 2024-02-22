@@ -93,7 +93,7 @@ router.post('/login', async (req, res) => {
     // create a token
     const token = createToken(vendor._id)
 
-    res.status(200).json({email, token})
+    res.status(200).json({email, token,vendor})
   } catch (error) {
     res.status(400).json({error: error.message})
   }
