@@ -4,9 +4,9 @@ const Product = require('../models/product')
 const mongoose = require('mongoose')
 
 // get all products
-router.get('/', async (req, res) => {
+router.get('/:vendorEmail', async (req, res) => {
   try {
-    const products = await Product.find();
+    const products = await Product.find({ vendor: vendorEmail });
     res.json(products);
   } catch (err) {
     console.error(err);
@@ -33,8 +33,10 @@ router.get('/:id', async (req, res) => {
 // //getby product category
 router.get('/category/:category', async (req, res) => {
   const category = req.params.category;
+  const vendorEmail = req.params.vendorEmail;
+
   try {
-    const products = await Product.find({ productCategory: category });
+    const products = await Product.find({ vendor: vendorEmail, productCategory: category });
     res.json(products);
   } catch (error) {
     res.status(500).json({ error: 'Internal Server Error' });
