@@ -90,7 +90,9 @@ router.patch('/:id', async (req, res) => {
   }
 });
 // search componets
-router.get('/Search/search', async (req, res) => {
+router.get('vendors/vendorEmail/search', async (req, res) => {
+  const vendorEmail = req.params.vendorEmail;
+
   try {
     const { query } = req.query;
 
@@ -98,10 +100,11 @@ router.get('/Search/search', async (req, res) => {
       return res.status(400).json({ error: 'Query parameter is required' });
     }
 
-    // Use a regex to perform a case-insensitive search
     const regex = new RegExp(query, 'i');
 
     const searchResults = await Product.find({
+      vendor: vendorEmail, // Filter by vendor's email
+
       $or: [
         { productName: { $regex: regex } },
         { productDescription: { $regex: regex } },
