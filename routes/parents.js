@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const Parent = require('../models/parent')
+const Child = require('../models/parent')
 const jwt = require('jsonwebtoken');
 const tokenBlacklist = new Set();
 
@@ -112,8 +113,39 @@ router.patch('/:email', async (req, res) => {
       Object.assign(parent.parentalDetails, req.body.parentalDetails);
     }
 
+    // Handle financial information update
     if (req.body.financialInformation) {
-      Object.assign(parent.financialInformation, req.body.financialInformation);
+      const { allowanceBalAmount, allowanceAmount, allowanceFrequency } = req.body.financialInformation;
+      if (allowanceBalAmount !== undefined) {
+        parent.financialInformation.allowanceBalAmount = allowanceBalAmount;
+      }
+      if (allowanceAmount !== undefined) {
+        parent.financialInformation.allowanceAmount = allowanceAmount;
+      }
+      if (allowanceFrequency) {
+        parent.financialInformation.allowanceFrequency = allowanceFrequency;
+      }
+    }
+
+    // Handle children updates or creation
+    if (req.body.children && req.body.children.length > 0) {
+      // Iterate over children in the request body
+      for (const childData of req.body.children) {
+        let child;
+        // Check if the child already exists by ID
+        if (childData._id) {
+          child = parent.children.id(childData._id);
+        }
+
+        // If the child doesn't exist, create a new child
+        if (!child) {
+          child = new Child(childData);
+          parent.children.push(child);
+        } else {
+          // Update existing child fields
+          Object.assign(child, childData);
+        }
+      }
     }
 
     const updatedParent = await parent.save();
@@ -123,6 +155,7 @@ router.patch('/:email', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error', details: err.message });
   }
 });
+
 
 router.post('/signOut', async (req, res) => {
   try {
@@ -159,7 +192,41 @@ router.post('/login', async (req, res) => {
       res.status(400).json({error: error.message})
     }
 });
+router.post('/deposit', async (req, res) => {
+  try {
+    const { childId, amount } = req.body;
 
+    // Validate input data
+    if (!childId || !amount || isNaN(amount)) {
+      return res.status(400).json({ error: 'Invalid input data' });
+    }
+
+    // Find the child by ID
+    const child = await Child.findById(childId);
+    if (!child) {
+      return res.status(404).json({ error: 'Child not found' });
+    }
+
+    // Update the child's allowance balance
+    child.financialInformation.allowanceBalAmount += parseFloat(amount);
+
+    // Update the corresponding parent's allowance balance
+    const parent = await Parent.findOne({ 'children._id': childId });
+    if (!parent) {
+      return res.status(404).json({ error: 'Parent not found for the child' });
+    }
+    parent.financialInformation.allowanceBalAmount += parseFloat(amount);
+
+    // Save changes to the database
+    await child.save();
+    await parent.save();
+
+    res.json({ message: 'Deposit successful' });
+  } catch (error) {
+    console.error('Error depositing money:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 
 

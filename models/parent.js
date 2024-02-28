@@ -2,6 +2,22 @@ const mongoose = require('mongoose')
 const bcrypt = require('bcryptjs')
 const validator = require('validator')
 
+const financialSchema = new mongoose.Schema({
+  allowanceBalAmount: {
+    type: Number,
+    default: null,
+  },
+  allowanceAmount: {
+    type: Number,
+    default: null,
+  },
+  allowanceFrequency: {
+    type: String,
+    enum: ['Weekly', 'Monthly'],
+    default: null,
+  }
+});
+
 const childSchema = new mongoose.Schema({
   childFullName: {
     type: String,
@@ -18,29 +34,8 @@ const childSchema = new mongoose.Schema({
   studentID: {
     type: String,
           default: '',
-
-
   },
-  financialInformation: {
-    allowanceBalAmount: {
-      type: Number,
-            default:null,
-
-    },
-    allowanceAmount: {
-      type: Number,
-            default: null,
-
-
-    },
-    allowanceFrequency: {
-      type: String,
-      enum: ['Weekly', 'Monthly'],
-            default: '',
-
-
-    }
-  },
+  financialInformation: financialSchema
 });
 
 const parentSchema = new mongoose.Schema({
@@ -78,26 +73,7 @@ const parentSchema = new mongoose.Schema({
     },
   },
   children: [childSchema], // Array of child documents
-  financialInformation: {
-    allowanceBalAmount: {
-      type: Number,
-            default: null,
-
-    },
-    allowanceAmount: {
-      type: Number,
-            default: null,
-
-
-    },
-    allowanceFrequency: {
-      type: String,
-      enum: ['Weekly', 'Monthly'],
-            default: null,
-
-
-    }
-  },
+  financialInformation: financialSchema,
  userAccountInfo:{
   email: {
     type: String,
@@ -167,5 +143,5 @@ parentSchema.statics.login = async function(email, password) {
 };
 
 
-
+module.exports = mongoose.model('Child', childSchema);
 module.exports = mongoose.model('Parent', parentSchema);
