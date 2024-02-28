@@ -90,7 +90,7 @@ router.patch('/:id', async (req, res) => {
   }
 });
 // search componets
-router.get('vendors/vendorEmail/search', async (req, res) => {
+router.get('vendors/:vendorEmail/search', async (req, res) => {
   const vendorEmail = req.params.vendorEmail;
 
   try {
