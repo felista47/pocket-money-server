@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const Parent = require('../models/parent')
-const Child = require('../models/parent')
+// const Child = require('../models/parent')
 const jwt = require('jsonwebtoken');
 const tokenBlacklist = new Set();
 
@@ -117,10 +117,10 @@ router.patch('/:email', async (req, res) => {
     if (req.body.financialInformation) {
       const { allowanceBalAmount, allowanceAmount, allowanceFrequency } = req.body.financialInformation;
       if (allowanceBalAmount !== undefined) {
-        parent.financialInformation.allowanceBalAmount = allowanceBalAmount;
+        parent.financialInformation.allowanceBalAmount += allowanceBalAmount;
       }
       if (allowanceAmount !== undefined) {
-        parent.financialInformation.allowanceAmount = allowanceAmount;
+        parent.financialInformation.allowanceAmount += allowanceAmount;
       }
       if (allowanceFrequency) {
         parent.financialInformation.allowanceFrequency = allowanceFrequency;
@@ -156,6 +156,30 @@ router.patch('/:email', async (req, res) => {
   }
 });
 
+router.delete('/:email/children/:childId', async (req, res) => {
+  try {
+    const { email, childId } = req.params;
+
+    // Find the parent by email
+    const parent = await Parent.findOne({ 'userAccountInfo.email': email });
+
+    if (!parent) {
+      return res.status(404).json({ error: 'Parent not found' });
+    }
+    parent.children.pull({_id:childId});
+
+
+    console.log(parent)
+
+ 
+    await parent.save();
+
+    res.json({ message: 'Child deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting child:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 router.post('/signOut', async (req, res) => {
   try {
