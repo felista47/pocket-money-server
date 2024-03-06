@@ -1,9 +1,10 @@
 const express = require('express')
 const router = express.Router()
 const Parent = require('../models/parent')
-// const Child = require('../models/parent')
+const Child = require('../models/parent')
 const jwt = require('jsonwebtoken');
 const tokenBlacklist = new Set();
+const _ = require('lodash');
 
 const createToken = (_id) => {
   return jwt.sign({_id}, process.env.SECRET, { expiresIn: '5m' })
@@ -37,19 +38,15 @@ router.get('/:email', async (req, res) => {
 
 // add a new parent
 router.post('/', async (req, res) => {
-  const { id, name, contactInfo, homeAddress,password, parentalDetails, children, financialInformation } = req.body;
+  const { id, name,phoneNumber,homeAddress,password,email, parentalDetails, children, financialInformation } = req.body;
 
   const parent = new Parent({
     personalInfo: {
       id: id,
       name: name,
-      contactInfo: {
-        phoneNumber: contactInfo.phoneNumber,
-        email: contactInfo.email
-      },
+      phoneNumber:phoneNumber,
       homeAddress: homeAddress,
-      password:password
-    },
+      },
     parentalDetails: {
       parentRelationship: parentalDetails.parentRelationship
     },
@@ -63,11 +60,15 @@ router.post('/', async (req, res) => {
         allowanceFrequency: child.financialInformation.allowanceFrequency
       }
     })),
-
     financialInformation: {
       allowanceBalAmount: financialInformation.allowanceBalAmount,
       allowanceAmount: financialInformation.allowanceAmount,
       allowanceFrequency: financialInformation.allowanceFrequency
+    },
+    userAccountInfo:{
+      email:email,
+      password:password
+
     }
   });
 
@@ -95,72 +96,64 @@ router.post('/signUp', async (req, res) => {
     res.status(400).json({error: error.message})
   }
 }); 
+ 
+//edit parent and child information
 
-router.patch('/:email', async (req, res) => {
+  router.patch('/:email', async (req, res) => {
   try {
     const parent = await Parent.findOne({ 'userAccountInfo.email': req.params.email });
 
     if (!parent) {
-      return res.status(404).json({ error: 'Parent not found' });
+      return res.status(404).json({ error: "Parent not found" });
     }
-
-    // Update only the fields that are provided in the request body
     if (req.body.personalInfo) {
-      Object.assign(parent.personalInfo, req.body.personalInfo);
-    }
+         Object.assign(parent.personalInfo, req.body.personalInfo);
+       }
+      
+       if (req.body.parentalDetails) {
+         Object.assign(parent.parentalDetails, req.body.parentalDetails);
+       }
 
-    if (req.body.parentalDetails) {
-      Object.assign(parent.parentalDetails, req.body.parentalDetails);
-    }
-
-    // Handle financial information update
-    if (req.body.financialInformation) {
-      const { allowanceBalAmount, allowanceAmount, allowanceFrequency } = req.body.financialInformation;
-      if (allowanceBalAmount !== undefined) {
-        parent.financialInformation.allowanceBalAmount += allowanceBalAmount;
-      }
-      if (allowanceAmount !== undefined) {
-        parent.financialInformation.allowanceAmount += allowanceAmount;
-      }
-      if (allowanceFrequency) {
-        parent.financialInformation.allowanceFrequency = allowanceFrequency;
-      }
-    }
-
-    // Handle children updates or creation
-    if (req.body.children && req.body.children.length > 0) {
-      // Iterate over children in the request body
-      for (const childData of req.body.children) {
-        let child;
-        // Check if the child already exists by ID
-        if (childData._id) {
-          child = parent.children.id(childData._id);
-        }
-
-        // If the child doesn't exist, create a new child
-        if (!child) {
-          child = new Child(childData);
-          parent.children.push(child);
+    //child update and creation
+    if (req.body.children) {
+      for (const childUpdate of req.body.children) {
+        const existingChild = parent.children.find(c => c.studentID === childUpdate.studentID);
+  
+        if (existingChild) {
+          Object.assign(parent.parentalDetails, req.body.parentalDetails);
         } else {
-          // Update existing child fields
-          Object.assign(child, childData);
+          // Create new child
+          parent.children.push(childUpdate);
         }
       }
     }
 
-    const updatedParent = await parent.save();
-    res.json(updatedParent);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Internal Server Error', details: err.message });
+    // handles deposit
+      if (req.body.financialInformation) {
+
+            const { allowanceBalAmount, allowanceAmount, allowanceFrequency } = req.body.financialInformation;
+            if (allowanceBalAmount !== undefined) {
+              parent.financialInformation.allowanceBalAmount += allowanceBalAmount;
+            }
+            if (allowanceAmount !== undefined) {
+              parent.financialInformation.allowanceAmount += allowanceAmount;
+            }
+            if (allowanceFrequency) {
+              parent.financialInformation.allowanceFrequency = allowanceFrequency;
+            }
+          }
+    res.status(200).json(parent);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
 });
+
 
 router.delete('/:email/children/:childId', async (req, res) => {
   try {
     const { email, childId } = req.params;
 
-    // Find the parent by email
+   // Find the parent by email
     const parent = await Parent.findOne({ 'userAccountInfo.email': email });
 
     if (!parent) {
