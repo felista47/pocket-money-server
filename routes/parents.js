@@ -1,10 +1,9 @@
 const express = require('express')
 const router = express.Router()
 const Parent = require('../models/parent')
-const Child = require('../models/parent')
+// const Child = require('../models/parent')
 const jwt = require('jsonwebtoken');
 const tokenBlacklist = new Set();
-const _ = require('lodash');
 
 const createToken = (_id) => {
   return jwt.sign({_id}, process.env.SECRET, { expiresIn: '5m' })
@@ -83,9 +82,9 @@ router.post('/', async (req, res) => {
 });
 
 router.post('/signUp', async (req, res) => {
-  const {email, password} = req.body
+try {
+    const {email, password} = req.body
 
-  try {
     const parent = await Parent.signup(email, password)
 
     // create a token
@@ -96,13 +95,11 @@ router.post('/signUp', async (req, res) => {
     res.status(400).json({error: error.message})
   }
 }); 
- 
-//edit parent and child information
 
-  router.patch('/:email', async (req, res) => {
+//Edit parent and related schema information
+router.patch('/:email', async (req, res) => {
   try {
     const parent = await Parent.findOne({ 'userAccountInfo.email': req.params.email });
-
     if (!parent) {
       return res.status(404).json({ error: "Parent not found" });
     }
@@ -120,8 +117,10 @@ router.post('/signUp', async (req, res) => {
         const existingChild = parent.children.find(c => c.studentID === childUpdate.studentID);
   
         if (existingChild) {
-          Object.assign(parent.parentalDetails, req.body.parentalDetails);
-        } else {
+          // return res.status(404).json({ error: "child exist" });
+          const minimalChildUpdate = { ...childUpdate, studentID: undefined }; // Remove studentID as it's not for update
+          existingChild.set(childUpdate);
+            } else {
           // Create new child
           parent.children.push(childUpdate);
         }
@@ -142,18 +141,19 @@ router.post('/signUp', async (req, res) => {
               parent.financialInformation.allowanceFrequency = allowanceFrequency;
             }
           }
+          
+    await parent.save();
     res.status(200).json(parent);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
-
 router.delete('/:email/children/:childId', async (req, res) => {
   try {
     const { email, childId } = req.params;
 
-   // Find the parent by email
+    // Find the parent by email
     const parent = await Parent.findOne({ 'userAccountInfo.email': email });
 
     if (!parent) {

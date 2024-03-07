@@ -6,10 +6,18 @@ const financialSchema = new mongoose.Schema({
   allowanceBalAmount: {
     type: Number,
     default: null,
+    min: 0 ,
+    validate: {
+      validator: (value) => value >= 0,
+      message: 'Allowance balance must be non-negative'
+    }
+
   },
   allowanceAmount: {
     type: Number,
     default: null,
+    min: 0 
+
   },
   allowanceFrequency: {
     type: String,
@@ -22,20 +30,15 @@ const childSchema = new mongoose.Schema({
   childFullName: {
     type: String,
           default: '',
-
-
   },
   gradeClass: {
     type: String,
           default: '',
-
-
   },
   studentID: {
     type: String,
           default: '',
   },
-  financialInformation: financialSchema
 });
 
 const parentSchema = new mongoose.Schema({
@@ -87,26 +90,30 @@ const parentSchema = new mongoose.Schema({
   } 
 
  }
+ 
 });
 
 // static signup method
 parentSchema.statics.signup = async function(email, password) {
+  console.log(email)
 
   // validation
   if (!email || !password) {
-    throw Error('All fields must be filled')
+    throw new Error('All fields must be filled')
   }
   if (!validator.isEmail(email)) {
-    throw Error('Email not valid')
+    throw new Error('Email not valid')
   }
   if (!validator.isStrongPassword(password)) {
-    throw Error('Password not strong enough')
+    throw new Error('Password not strong enough')
   }
 
-  const exists = await this.findOne({ email })
+  const exists = await this.findOne({ 'userAccountInfo.email': email });
+  console.log('exists',exists)
 
   if (exists) {
-    throw Error('User with this email already exists');
+    console.log(exists)
+    throw new Error('User with this email already exists');
   }
 
   const salt = await bcrypt.genSalt(10)
@@ -114,6 +121,11 @@ parentSchema.statics.signup = async function(email, password) {
 
   const parent = await this.create({
     userAccountInfo: { email, password: hash },
+    financialInformation: { 
+      allowanceBalAmount: 0,  
+      allowanceAmount: 0,
+      allowanceFrequency: 'Weekly'
+    }
   });
   return parent
 }
