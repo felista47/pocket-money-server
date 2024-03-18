@@ -2,44 +2,7 @@ const mongoose = require('mongoose')
 const bcrypt = require('bcryptjs')
 const validator = require('validator')
 
-const financialSchema = new mongoose.Schema({
-  allowanceBalAmount: {
-    type: Number,
-    default: null,
-    min: 0 ,
-    validate: {
-      validator: (value) => value >= 0,
-      message: 'Allowance balance must be non-negative'
-    }
 
-  },
-  allowanceAmount: {
-    type: Number,
-    default: null,
-    min: 0 
-
-  },
-  allowanceFrequency: {
-    type: String,
-    enum: ['Weekly', 'Monthly'],
-    default: null,
-  }
-});
-
-const childSchema = new mongoose.Schema({
-  childFullName: {
-    type: String,
-          default: '',
-  },
-  gradeClass: {
-    type: String,
-          default: '',
-  },
-  studentID: {
-    type: String,
-          default: '',
-  },
-});
 
 const parentSchema = new mongoose.Schema({
   personalInfo: {
@@ -75,9 +38,7 @@ const parentSchema = new mongoose.Schema({
 
     },
   },
-  children: [childSchema], // Array of child documents
-  financialInformation: financialSchema,
- userAccountInfo:{
+  userAccountInfo:{
   email: {
     type: String,
     required: true
@@ -121,11 +82,6 @@ parentSchema.statics.signup = async function(email, password) {
 
   const parent = await this.create({
     userAccountInfo: { email, password: hash },
-    financialInformation: { 
-      allowanceBalAmount: 0,  
-      allowanceAmount: 0,
-      allowanceFrequency: 'Weekly'
-    }
   });
   return parent
 }
@@ -155,5 +111,4 @@ parentSchema.statics.login = async function(email, password) {
 };
 
 
-module.exports = mongoose.model('Child', childSchema);
 module.exports = mongoose.model('Parent', parentSchema);

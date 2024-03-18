@@ -1,7 +1,6 @@
 const express = require('express')
 const router = express.Router()
 const Parent = require('../models/parent')
-// const Child = require('../models/parent')
 const jwt = require('jsonwebtoken');
 const tokenBlacklist = new Set();
 
@@ -37,7 +36,7 @@ router.get('/:email', async (req, res) => {
 
 // add a new parent
 router.post('/', async (req, res) => {
-  const { id, name,phoneNumber,homeAddress,password,email, parentalDetails, children, financialInformation } = req.body;
+  const { id, name,phoneNumber,homeAddress,password,email, parentalDetails,} = req.body;
 
   const parent = new Parent({
     personalInfo: {
@@ -48,21 +47,6 @@ router.post('/', async (req, res) => {
       },
     parentalDetails: {
       parentRelationship: parentalDetails.parentRelationship
-    },
-    children: children.map(child => ({
-      childFullName: child.childFullName,
-      gradeClass: child.gradeClass,
-      studentID: child.studentID,
-      financialInformation: {
-        allowanceBalAmount: child.financialInformation.allowanceBalAmount,
-        allowanceAmount: child.financialInformation.allowanceAmount,
-        allowanceFrequency: child.financialInformation.allowanceFrequency
-      }
-    })),
-    financialInformation: {
-      allowanceBalAmount: financialInformation.allowanceBalAmount,
-      allowanceAmount: financialInformation.allowanceAmount,
-      allowanceFrequency: financialInformation.allowanceFrequency
     },
     userAccountInfo:{
       email:email,
@@ -111,36 +95,6 @@ router.patch('/:email', async (req, res) => {
          Object.assign(parent.parentalDetails, req.body.parentalDetails);
        }
 
-    //child update and creation
-    if (req.body.children) {
-      for (const childUpdate of req.body.children) {
-        const existingChild = parent.children.find(c => c.studentID === childUpdate.studentID);
-  
-        if (existingChild) {
-          // return res.status(404).json({ error: "child exist" });
-          const minimalChildUpdate = { ...childUpdate, studentID: undefined }; // Remove studentID as it's not for update
-          existingChild.set(childUpdate);
-            } else {
-          // Create new child
-          parent.children.push(childUpdate);
-        }
-      }
-    }
-
-    // handles deposit
-      if (req.body.financialInformation) {
-
-            const { allowanceBalAmount, allowanceAmount, allowanceFrequency } = req.body.financialInformation;
-            if (allowanceBalAmount !== undefined) {
-              parent.financialInformation.allowanceBalAmount += allowanceBalAmount;
-            }
-            if (allowanceAmount !== undefined) {
-              parent.financialInformation.allowanceAmount += allowanceAmount;
-            }
-            if (allowanceFrequency) {
-              parent.financialInformation.allowanceFrequency = allowanceFrequency;
-            }
-          }
           
     await parent.save();
     res.status(200).json(parent);
@@ -149,30 +103,6 @@ router.patch('/:email', async (req, res) => {
   }
 });
 
-router.delete('/:email/children/:childId', async (req, res) => {
-  try {
-    const { email, childId } = req.params;
-
-    // Find the parent by email
-    const parent = await Parent.findOne({ 'userAccountInfo.email': email });
-
-    if (!parent) {
-      return res.status(404).json({ error: 'Parent not found' });
-    }
-    parent.children.pull({_id:childId});
-
-
-    console.log(parent)
-
- 
-    await parent.save();
-
-    res.json({ message: 'Child deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting child:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
 
 router.post('/signOut', async (req, res) => {
   try {

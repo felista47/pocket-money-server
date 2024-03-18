@@ -16,6 +16,9 @@ app.use('/vendor',vendorRouter)
 const parentRouter = require('./routes/parents')
 app.use('/parent',parentRouter)
 
+const childRouter = require('./routes/Child')
+app.use('/children',childRouter)
+
 const productRouter = require('./routes/products')
 app.use('/product',productRouter)
 
