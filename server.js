@@ -17,7 +17,7 @@ const parentRouter = require('./routes/parents')
 app.use('/parent',parentRouter)
 
 const childRouter = require('./routes/Child')
-app.use('/children',childRouter)
+app.use('/student',childRouter)
 
 const productRouter = require('./routes/products')
 app.use('/product',productRouter)
