@@ -70,39 +70,29 @@ router.delete('/:parentEmail/children/:childId', async (req, res) => {
 });
   
   //sell endpoint
-router.put('/checkOut/:studentID', async (req, res) => {
+router.put('/checkout/:studentID', async (req, res) => {
   try {
-      const updateObject = {};
-      console.log(req.body); // Log the entire request body
+    const updateObject = {};
 
-      if (req.body.financialInformation) {
-          const { allowanceBalAmount } = req.body.financialInformation;
-          console.log(allowanceBalAmount); // Log the extracted allowance amount
+    // Update financialInformation conditionally
+    if (req.body.BalAmount !== undefined) {
+      updateObject.$inc = { 'BalAmount': -req.body.BalAmount }; // Use $inc for subtraction
+  }
+  
+    const updatedChild = await Child.findOneAndUpdate(
+      { studentID: req.params.studentID },
+      updateObject,
+      { new: true } // Return the updated document
+    );
 
-          if (allowanceBalAmount !== undefined) {
-              // Use $inc to decrement allowanceBalAmount
-              updateObject.$inc = { 'financialInformation.allowanceBalAmount': -allowanceBalAmount };
-          } else {
-              return res.status(400).json({ message: 'Allowance amount not provided' });
-          }
-      } else {
-          return res.status(400).json({ message: 'Financial information not provided' });
-      }
-
-      const updatedChild = await Child.findOneAndUpdate(
-          { studentID: req.params.studentID },
-          updateObject,
-          { new: true } // Return the updated document
-      );
-      console.log(updatedChild);
-
-      if (!updatedChild) return res.status(404).json({ message: 'Child not found' });
-      res.json(updatedChild);
+    if (!updatedChild) return res.status(404).json({ message: 'Child not found' });
+    res.json(updatedChild);
   } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Error updating child' });
+    console.error(err);
+    res.status(500).json({ message: 'Error updating child' });
   }
 });
+  
 
 // update student details
 router.put('/:studentID', async (req, res) => {
