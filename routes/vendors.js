@@ -8,7 +8,7 @@ const createToken = (_id) => {
   return jwt.sign({_id}, process.env.SECRET, { expiresIn: '3d' })
 }
 
-// get all vendors
+// get all vendors not used in the app
 router.get('/', async (req, res) => {
     try {
       const vendors = await Vendor.find();
@@ -18,6 +18,8 @@ router.get('/', async (req, res) => {
       res.status(500).json({ error: 'Internal Server Error', details: err.message });
     }
   });
+
+
   // get vendor by email
   router.get('/:email', async (req, res) => {
     try {
@@ -37,16 +39,12 @@ router.get('/', async (req, res) => {
 // Create a new vendor instance
 
 router.post('/', async (req, res) => {
-  const { id, fullName, contactInfo, homeAddress, paymentDetails, additionalNotes, active ,servicesProvided} = req.body;
-
+  const { id, fullName,password,email,homeAddress, paymentDetails,active ,servicesProvided} = req.body;
   const vendor = new Vendor({
     personalInformation: {
       id: id,
       fullName: fullName,
-      contactInformation: {
-        phoneNumber: contactInfo.phoneNumber,
-        emailAddress: contactInfo.emailAddress
-      },
+      phoneNumber:phoneNumber,
       homeAddress: homeAddress
     },
     servicesProvided,
@@ -55,7 +53,11 @@ router.post('/', async (req, res) => {
       tillHolderName: paymentDetails.tillHolderName,
       tillNumber: paymentDetails.tillNumber
     },
-    additionalNotes: additionalNotes,
+    userAccountInfo:{
+      email:email,
+      password:password
+
+    },
     active: active
   });
 
@@ -73,51 +75,102 @@ router.post('/signUp', async (req, res) => {
   const {email, password} = req.body
 
   try {
-    const vendor = await Vendor.signup(email, password)
+    const result = await Vendor.signup(email, password)
 
+    if (result.errors) {
+      // If there are errors, send them to the frontend
+      return res.status(400).json({ errors: result.errors });
+    }
     // create a token
     const token = createToken(vendor._id)
 
-    res.status(200).json({email, token,vendor})
+    res.status(200).json({email, token, vendor:result.vendor})
   } catch (error) {
     res.status(400).json({error: error.message})
   }
 }); 
 
 router.post('/login', async (req, res) => {
-  const {email, password} = req.body
-
   try {
-    const vendor = await Vendor.login(email, password)
+    const { email, password } = req.body;
 
-    // create a token
-    const token = createToken(vendor._id)
+    const result = await Vendor.login(email, password);
 
-    res.status(200).json({ email, token,vendor});
+    if (result.errors) {
+      // If there are errors, send them to the frontend
+      return res.status(400).json({ errors: result.errors });
+    }
+
+    // If login was successful, create a token
+    const token = createToken(result.vendor._id);
+
+    res.status(200).json({ email, token, vendor: result.vendor });
   } catch (error) {
-    res.status(400).json({error: error.message})
+    res.status(400).json({ error: error.message });
   }
 });
 // update vendor details
 router.patch('/:email', async (req, res) => {
-    try {
-      const vendor = await Vendor.findById({ 'userAccountInfo.email': req.params.email });
-  
-      if (!vendor) {
-        return res.status(404).json({ error: 'vender not found' });
-      }
-  
-      // Update only the 'sub' field if it exists in the request body
-      if (req.body.sub !== undefined) {
-        vendor.sub = req.body.sub;
-      }
-  
-      const updatedVendor = await vendor.save();
-      res.json(updatedVendor);
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: 'Internal Server Error', details: err.message });
+  try {
+    const vendor = await Vendor.findOne({ 'userAccountInfo.email': req.params.email });
+
+    if (!vendor) {
+      return res.status(404).json({ error: 'Vendor not found' });
     }
-  });
+
+    const updateObject = {};
+
+    if (req.body.personalInfo !== undefined) {
+     updateObject.personalInfo= req.body.personalInfo;
+    }
+
+    if (req.body.shopInfo !== undefined) {
+      // Copy shopInfo fields
+      updateObject['shopInfo'] = { ...req.body.shopInfo };
+      
+      // Ensure that updateObject.$inc is defined
+      if (!updateObject.$inc) {
+          updateObject.$inc = {};
+      }
+      
+      // Conditional update for shopBal
+      if (req.body.shopInfo.shopBal !== undefined) {
+          updateObject.$inc['shopInfo.shopBal'] = req.body.shopInfo.shopBal; // Assign new value directly
+      }
+  }
+  
+
+    if (req.body.userAccountInfo !== undefined) {
+     updateObject.userAccountInfo = req.body.userAccountInfo;
+    }
+
+    if (req.body.servicesProvided !== undefined) {
+      updateObject.servicesProvided = req.body.servicesProvided;
+    }
+
+    if (req.body.paymentDetails !== undefined) {
+     updateObject.paymentDetails=req.body.paymentDetails;
+    }
+
+    if (req.body.active !== undefined) {
+      vendor.active = req.body.active;
+    }
+
+
+    const updatedVendor = await Vendor.findOneAndUpdate(
+      { 'userAccountInfo.email': req.params.email },
+       updateObject,
+      { new: true } // Return the updated document
+    );
+
+    if (!updatedVendor) return res.status(404).json({ message: 'vendor not found' });
+    res.json(updatedVendor);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal Server Error', details: err.message });
+  }
+});
+
+
 
   module.exports = router

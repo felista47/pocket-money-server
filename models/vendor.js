@@ -20,32 +20,45 @@ const vendorSchema = new mongoose.Schema({
       type: String,
       default:''
     },
-    
   },
   shopInfo:{
     shopName:{
       type:String,
       default:''
     } ,
-    location:{
+    school:{
       type:String,
       default:''
     } ,
     contactInfo:{
       type:String,
       default:''
+    },
+    shopBal:{
+      type: Number,
+      default: 0,
+      min: 0 ,
     }
+
   },
-  userAccountInfo:{
+  userAccountInfo: {
     email: {
       type: String,
-      required:true
-    }  ,
+      required: true,
+      unique: true, // Ensure email is unique
+      validate: [validator.isEmail, 'Invalid email format'], // Validate email format
+    },
     password: {
       type: String,
-      required:true
-    }
-   },
+      required: true,
+      validate: [ // Validate password strength
+        {
+          validator: value => validator.isStrongPassword(value),
+          message: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character',
+        },
+      ],
+    },
+  },
   servicesProvided: [
     {
       type: String,
@@ -71,64 +84,72 @@ const vendorSchema = new mongoose.Schema({
     },
 
   },
-  additionalNotes: {
-    type: String,
-    default:''
-
-  },
   active: {
     type: Boolean,
     default: true
   }
 });
-vendorSchema.statics.signup = async function(email, password) {
 
-  // validation
-  if (!email || !password) {
-    throw Error('All fields must be filled')
-  }
-  if (!validator.isEmail(email)) {
-    throw Error('Email not valid')
-  }
-  if (!validator.isStrongPassword(password)) {
-    throw Error('Password not strong enough')
-  }
+vendorSchema.statics.signup = async function (email, password) {
+  try {
+    // Validation
+    const errors = [];
+    if (!email) {
+      errors.push('Email must be filled');
+    }
+    if (!password) {
+      errors.push('Password must be filled');
+    }
+    const exists = await this.findOne({ 'userAccountInfo.email': email });
+    if (exists) {
+      errors.push('User with this email already exists');
+    }
 
-  const exists = await this.findOne({ email })
+    if (errors.length > 0) {
+      return { errors }; // Return errors array
+    }
 
-  if (exists) {
-    throw Error('User with this email already exists');
-  }
-
-  const salt = await bcrypt.genSalt(10)
-  const hash = await bcrypt.hash(password, salt)
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(password, salt);
 
     const vendor = await this.create({
-      userAccountInfo: { email, password: hash }})
-  return vendor
-}
+      userAccountInfo: { email, password: hash },
+    });
+    return vendor;
+  } catch (error) {
+    throw new Error(error.message);
+  }
+};
 
-// static login method
-vendorSchema.statics.login = async function(email, password) {
+// Enhanced error handling for login method
+vendorSchema.statics.login = async function (email, password) {
   try {
-    if (!email || !password) {
-      throw new Error('All fields must be filled');
+    // Validation
+    const errors = [];
+    if (!email) {
+      errors.push('Email must be filled');
+    }
+    if (!password) {
+      errors.push('Password must be filled');
+    }
+
+    if (errors.length > 0) {
+      return { errors }; // Return errors array
     }
 
     const vendor = await this.findOne({ 'userAccountInfo.email': email });
     if (!vendor) {
-      throw new Error('Incorrect email or password');
+      return { errors: ['Incorrect email'] }; // Return error message
     }
 
     const match = await bcrypt.compare(password, vendor.userAccountInfo.password);
     if (!match) {
-      throw new Error('Incorrect email or password');
+      return { errors: ['Incorrect password'] }; // Return error message
     }
 
-    return { success: true, vendor };
+    return { success: true, vendor};
   } catch (error) {
-    console.error(error);
-    throw new Error('Internal Server Error',error);
+    throw new Error(error.message);
   }
 };
 

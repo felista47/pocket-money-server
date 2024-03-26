@@ -52,15 +52,20 @@ const parentSchema = new mongoose.Schema({
 parentSchema.statics.signup = async function (email, password) {
   try {
     // Validation
+    const errors = [];
     if (!email) {
-      throw new Error('email must be filled');
+      errors.push('Email must be filled');
     }
     if (!password) {
-      throw new Error('password must be filled');
+      errors.push('Password must be filled');
     }
     const exists = await this.findOne({ 'userAccountInfo.email': email });
     if (exists) {
-      throw new Error('User with this email already exists');
+      errors.push('User with this email already exists');
+    }
+
+    if (errors.length > 0) {
+      return { errors }; // Return errors array
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -69,7 +74,7 @@ parentSchema.statics.signup = async function (email, password) {
     const parent = await this.create({
       userAccountInfo: { email, password: hash },
     });
-    return parent;
+    return { parent }; // Return parent object
   } catch (error) {
     throw new Error(error.message);
   }
@@ -79,27 +84,33 @@ parentSchema.statics.signup = async function (email, password) {
 parentSchema.statics.login = async function (email, password) {
   try {
     // Validation
+    const errors = [];
     if (!email) {
-      throw new Error('email must be filled');
+      errors.push('Email must be filled');
     }
     if (!password) {
-      throw new Error('password must be filled');
+      errors.push('Password must be filled');
+    }
+
+    if (errors.length > 0) {
+      return { errors }; // Return errors array
     }
 
     const parent = await this.findOne({ 'userAccountInfo.email': email });
     if (!parent) {
-      throw new Error('Incorrect email');
+      return { errors: ['Incorrect email'] }; // Return error message
     }
 
     const match = await bcrypt.compare(password, parent.userAccountInfo.password);
     if (!match) {
-      throw new Error('Incorrect password');
+      return { errors: ['Incorrect password'] }; // Return error message
     }
 
-    return { success: true, parent };
+    return { success: true, parent }; // Return success and parent object
   } catch (error) {
     throw new Error(error.message);
   }
 };
+
 
 module.exports = mongoose.model('Parent', parentSchema);

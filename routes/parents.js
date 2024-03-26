@@ -66,20 +66,24 @@ router.post('/', async (req, res) => {
 });
 
 router.post('/signUp', async (req, res) => {
-try {
-    const {email, password} = req.body
+  try {
+    const { email, password } = req.body;
 
-    const parent = await Parent.signup(email, password)
+    const result = await Parent.signup(email, password);
+
+    if (result.errors) {
+      // If there are errors, send them to the frontend
+      return res.status(400).json({ errors: result.errors });
+    }
 
     // create a token
-    const token = createToken(parent._id)
+    const token = createToken(result.parent._id);
 
-    res.status(200).json({email, token,parent})
+    res.status(200).json({ email, token, parent: result.parent });
   } catch (error) {
-    res.status(400).json({error: error.message})
+    res.status(400).json({ error: error.message });
   }
-}); 
-
+});
 //Edit parent and related schema information
 router.patch('/:email', async (req, res) => {
   try {
@@ -126,19 +130,25 @@ router.post('/signOut', async (req, res) => {
 
 // Login route
 router.post('/login', async (req, res) => {
-    const {email, password} = req.body
+  try {
+    const { email, password } = req.body;
 
-    try {
-      const parent = await Parent.login(email, password)
-  
-      // create a token
-      const token = createToken(parent._id)
-  
-      res.status(200).json({email, token})
-    } catch (error) {
-      res.status(400).json({error: error.message})
+    const result = await Parent.login(email, password);
+
+    if (result.errors) {
+      // If there are errors, send them to the frontend
+      return res.status(400).json({ errors: result.errors });
     }
+
+    // If login was successful, create a token
+    const token = createToken(result.parent._id);
+
+    res.status(200).json({ email, token, parent: result.parent });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
+
 router.post('/deposit', async (req, res) => {
   try {
     const { childId, amount } = req.body;
