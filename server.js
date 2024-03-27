@@ -8,7 +8,8 @@ connectDB();
 // Middleware to parse JSON
 app.use(express.json());
  
-
+const paymentRoute= require("./routes/paymentRoute")
+app.use("/payment", paymentRoute);
 
 const vendorRouter = require('./routes/vendors')
 app.use('/vendor',vendorRouter)
