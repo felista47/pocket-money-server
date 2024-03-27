@@ -22,7 +22,7 @@ const createTokenAndRegisterIPN = async () => {
         const ipnRegistrationUrl = "https://cybqa.pesapal.com/pesapalv3/api/URLSetup/RegisterIPN";
 
         const ipnData = JSON.stringify({
-            "url": " https://pocket-money.up.railway.app/ipn",
+            "url": "https://pocket-money.up.railway.app/payment/ipn",
             "ipn_notification_type": "GET"
         });
 
@@ -53,18 +53,13 @@ const createTokenAndRegisterIPN = async () => {
 
 
 const submitOrder = async (req,res,next) => {
+    const { phone, amount,emailAddress } = req.body;
+
     try {
         const { token, ipnId } = await createTokenAndRegisterIPN();
         const merchantReference = Math.floor(Math.random() * 1000000000000000000);
-        const phone = "0745825378";
-        const amount = 1.00;
         const callbackUrl = "https://pocket-money.up.railway.app/payment/confirmation";
         const branch = "Manoti";
-        const firstName = "Felista";
-        const middleName = "Manoti";
-        const lastName = "Sawe";
-        const emailAddress = "manotifelista9@gmail.com";     
-
         const headers = {
             "Accept": "application/json",
             "Content-Type": "application/json",
@@ -83,9 +78,6 @@ const submitOrder = async (req,res,next) => {
                 "email_address": `${emailAddress}`,
                 "phone_number": `${phone}`,
                 "country_code": "KE",
-                "first_name": `${firstName}`,
-                "middle_name": `${middleName}`,
-                "last_name": `${lastName}`,
                 "line_1": "Pesapal Limited",
                 "line_2": "",
                 "city": "",
@@ -94,15 +86,17 @@ const submitOrder = async (req,res,next) => {
                 "zip_code": ""
             }
         };
-
         const response = await axios.post("https://cybqa.pesapal.com/pesapalv3/api/Transactions/SubmitOrderRequest", data, { headers });
         console.log("Order submission successful:");
         console.log(response.data);
-        // Operation b4 submitting response to client.
-        req.transactionID=response.data.order_tracking_id
-        req.token =token
-        res.status(200).json({ message: "Order submitted successfully",response:response.data});
-    } catch (error) {
+           // Set data in the request object to be used by confirmPayment and getTransactionStatus
+           url = response.data.redirect_url
+           req.transactionID = response.data.order_tracking_id;
+           req.token = token;
+           res.redirect(response.data.redirect_url);
+
+           setTimeout(next, 2 * 60 * 1000);
+               } catch (error) {
         console.error("Error submitting order:", error.message);
         if (error.response) {
             console.error("Response data:", error.response.data);
@@ -111,39 +105,33 @@ const submitOrder = async (req,res,next) => {
     }
 };
 
-const confirmPayment =async (req,res)=>{
-console.log(req)
-console.log("Huray! We received some data")
-console.log(req.body);
-res.status(200);
-}
-
-
+const confirmPayment = async (req, res) => {
+    try {    
+        console.log('the req for get transaction',req)    
+    } catch (error) {
+        console.error("Error confirming payment:", error.message);
+        res.status(500).send("Internal Server Error");
+    }
+};
 
 const getTransactionStatus = async (req, res) => {
     try {
-        console.log({
-            token:req.token,
-            trackingID:req.transactionID
-        })
-        const transactionID = req.transactionID
-        const response = await fetch(`https://cybqa.pesapal.com/pesapalv3/api/Transactions/GetTransactionStatus?orderTrackingId=${transactionID}`,
-        {
+        const transactionID = req.transactionID;
+        const response = await axios.get(`https://cybqa.pesapal.com/pesapalv3/api/Transactions/GetTransactionStatus?orderTrackingId=${transactionID}`, {
             headers: {
                 "Authorization": `Bearer ${req.token}`
-            },
-            method: "GET",
-            redirect: "follow"
-
+            }
         });
 
-       
-        const result = await response.text();
-        console.log(result)
-      } catch (error) {
-        console.error(error);
-      };
-}
+        console.log("Transaction status:", response.data);
+        // Handle transaction status
+        
+        res.status(200).send("Transaction status retrieved successfully");
+    } catch (error) {
+        console.error("Error retrieving transaction status:", error.message);
+        res.status(500).send("Internal Server Error");
+    }
+};
 
 module.exports = {
     submitOrder,
