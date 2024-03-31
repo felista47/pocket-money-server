@@ -29,6 +29,11 @@ router.post('/ipn', async (req, res) => {
       }
 
 })
+
+router.get('/payment-callback', (req, res) => {
+  console.log('callback',req.body);
+  res.status(200).send('Callback received successfully.');
+});
 //confirmation 
 router.get('/confirmation',confirmPayment);
 

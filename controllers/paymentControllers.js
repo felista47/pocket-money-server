@@ -89,14 +89,9 @@ const submitOrder = async (req,res,next) => {
         const response = await axios.post("https://cybqa.pesapal.com/pesapalv3/api/Transactions/SubmitOrderRequest", data, { headers });
         console.log("Order submission successful:");
         console.log(response.data);
-           // Set data in the request object to be used by confirmPayment and getTransactionStatus
-           url = response.data.redirect_url
-           req.transactionID = response.data.order_tracking_id;
-           req.token = token;
-           res.redirect(response.data.redirect_url);
-
-           setTimeout(next, 2 * 60 * 1000);
-               } catch (error) {
+       const  IPNtoken=token
+        res.status(200).json({ data: response.data, IPNtoken });
+    } catch (error) {
         console.error("Error submitting order:", error.message);
         if (error.response) {
             console.error("Response data:", error.response.data);
