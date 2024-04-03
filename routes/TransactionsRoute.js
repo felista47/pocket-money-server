@@ -13,10 +13,11 @@ router.post('/', async (req, res) => {
 });
 
 // Route to get all transactions
-router.get('/', async (req, res) => {
-    try {
-        const transactions = await Transactions.find();
-        res.json(transactions);
+router.get('/:parentEmail', async (req, res) => {
+    try { 
+    const { parentEmail } = req.params;
+    const transactions = await Transactions.find({ parent: parentEmail });
+    res.json(transactions);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

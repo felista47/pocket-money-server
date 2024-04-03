@@ -21,6 +21,10 @@ const TransactionsSchema = new mongoose.Schema({
       paymentAccount:{
         type:String,
         required: true,
+      },
+      paymentMethod:{
+        type:String,
+        required: true,
       }
  })
  module.exports = mongoose.model('Transactions',TransactionsSchema);
