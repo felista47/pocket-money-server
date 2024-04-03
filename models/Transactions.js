@@ -6,10 +6,6 @@ const TransactionsSchema = new mongoose.Schema({
         type: String,
         required:true,
     },
-    studentID: {
-        type: String,
-        required:true,
-      },
       Amount:{
         type: Number,
         required:true,
