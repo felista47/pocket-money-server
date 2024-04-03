@@ -23,6 +23,9 @@ app.use('/student',childRouter)
 const productRouter = require('./routes/products')
 app.use('/product',productRouter)
 
+const transactionsRouter = require('./routes/TransactionsRoute')
+app.use('/transactions',transactionsRouter)
+
 const server = app.listen(process.env.PORT || 5000);
 const portNumber = server.address().port;
 console.log(`Server is running on port ${portNumber}`);
