@@ -2,6 +2,13 @@ const express = require('express');
 const router = express.Router();
 const Child = require('../models/Child'); 
 
+const credentials ={
+    apiKey:'cab628b0ab7c4f0e660a367d329fe7572713a1c34211dad7792af487e5c5c189',
+    username:'pokectMoney'
+};
+const AfricasTalking = require('africastalking')(credentials);
+const sms = AfricasTalking.SMS;
+
 // get student by parent email
 router.get('/parent/:parentEmail', async (req, res) => {
   try {
@@ -69,29 +76,52 @@ router.delete('/:parentEmail/children/:childId', async (req, res) => {
   }
 });
   
-  //sell endpoint
+
+//message endpoint
+// Function to send SMS reminder
+async function sendReminder() {
+  try {
+    const phoneNumber = '+254745825378';
+    const message = `Hello! Your child's account balance is low. Please top up their pocket money.`;
+    await sms.send({
+      to: [phoneNumber],
+      message: message
+    });
+    console.log('SMS reminder sent successfully.');
+  } catch (error) {
+    console.error('Error sending SMS reminder:', error);
+    throw new Error('Error sending SMS reminder');
+  }
+}
+
+
+
+// Checkout endpoint handler
 router.put('/checkout/:studentID', async (req, res) => {
   try {
-    const updateObject = {};
+    const { BalAmount } = req.body;
 
-    // Update financialInformation conditionally
-    if (req.body.BalAmount !== undefined) {
-      updateObject.$inc = { 'BalAmount': -req.body.BalAmount }; // Use $inc for subtraction
-  }
-  
     const updatedChild = await Child.findOneAndUpdate(
       { studentID: req.params.studentID },
-      updateObject,
-      { new: true } // Return the updated document
+      { $inc: { 'BalAmount': -BalAmount } },
+      { new: true }
     );
 
     if (!updatedChild) return res.status(404).json({ message: 'Child not found' });
+
+    // Check if the updated BalAmount is equal to the AllowanceLimit
+    if (updatedChild.BalAmount === updatedChild.AllowanceLimit) {
+      await sendReminder(); // Call the function to send SMS
+    }
+
     res.json(updatedChild);
-  } catch (err) {
-    console.error(err);
+  } catch (error) {
+    console.error('Error updating child:', error);
     res.status(500).json({ message: 'Error updating child' });
   }
 });
+
+  
   
 
 // update student details
