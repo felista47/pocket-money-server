@@ -27,9 +27,13 @@ const childSchema = new mongoose.Schema({
       message: 'Allowance balance must be non-negative'
     }
   },
-  AllowanceLimit: {
+  DailyLimit: {
     type: Number,
-    default: null,
+    default: 0,
+    min: 0 
+  }, AllowanceLimit: {
+    type: Number,
+    default: 0,
     min: 0 
   },
   Frequency: {

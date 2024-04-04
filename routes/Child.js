@@ -3,8 +3,8 @@ const router = express.Router();
 const Child = require('../models/Child'); 
 
 const credentials ={
-    apiKey:'cab628b0ab7c4f0e660a367d329fe7572713a1c34211dad7792af487e5c5c189',
-    username:'pokectMoney'
+    apiKey:process.env.API_KEY,
+    username:process.env.USER_NAME
 };
 const AfricasTalking = require('africastalking')(credentials);
 const sms = AfricasTalking.SMS;
@@ -100,14 +100,29 @@ async function sendReminder() {
 router.put('/checkout/:studentID', async (req, res) => {
   try {
     const { BalAmount } = req.body;
+    const { studentID } = req.params;
 
+    // Fetch the current child details
+    const child = await Child.findOne({ studentID });
+    if (!child) return res.status(404).json({ message: 'Child not found' });
+    // Check if the BalAmount to be deducted is greater than the current BalAmount or DailyLimit
+    if (BalAmount > child.BalAmount) {
+      return res.status(400).json({ message: `Insufficient balance. Your current balance is Ksh ${child.BalAmount}` });
+    }
+    if (BalAmount > child.DailyLimit) {
+      return res.status(400).json({ message: `Cannot deduct more than the current daily limit of ksh: ${child.DailyLimit}` });
+    }
+
+    // Calculate the updated BalAmount and DailyLimit
+    const updatedBalAmount = child.BalAmount - BalAmount;
+    const updatedDailyLimit = child.DailyLimit - BalAmount;
+
+    // Update the BalAmount and DailyLimit
     const updatedChild = await Child.findOneAndUpdate(
-      { studentID: req.params.studentID },
-      { $inc: { 'BalAmount': -BalAmount } },
+      { studentID },
+      { $set: { 'BalAmount': updatedBalAmount, 'DailyLimit': updatedDailyLimit } },
       { new: true }
     );
-
-    if (!updatedChild) return res.status(404).json({ message: 'Child not found' });
 
     // Check if the updated BalAmount is equal to the AllowanceLimit
     if (updatedChild.BalAmount === updatedChild.AllowanceLimit) {
@@ -120,6 +135,8 @@ router.put('/checkout/:studentID', async (req, res) => {
     res.status(500).json({ message: 'Error updating child' });
   }
 });
+
+
 
   
   
@@ -142,9 +159,12 @@ router.put('/:studentID', async (req, res) => {
       updateObject.$inc = { 'BalAmount': req.body.BalAmount }; // Use $inc for addition
   }
   
-      if (req.body.AllowanceLimit !== undefined) {
-          updateObject.AllowanceLimit =req.body.AllowanceLimit;
-        }
+  if (req.body.AllowanceLimit !== undefined) {
+    updateObject.AllowanceLimit =req.body.AllowanceLimit;
+  }
+  if (req.body.DailyLimit !== undefined) {
+      updateObject.DailyLimit =req.body.DailyLimit;
+    }
         if (req.body.Frequency !== undefined) {
           updateObject.Frequency =req.body.Frequency;
         }
