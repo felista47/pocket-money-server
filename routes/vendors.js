@@ -82,7 +82,7 @@ router.post('/signUp', async (req, res) => {
       return res.status(400).json({ errors: result.errors });
     }
     // create a token
-    const token = createToken(vendor._id)
+    // const token = createToken(vendor._id)
 
     res.status(200).json({email, token, vendor:result.vendor})
   } catch (error) {
@@ -110,7 +110,7 @@ router.post('/login', async (req, res) => {
   }
 });
 // update vendor details
-router.patch('/:email', async (req, res) => {
+router.put('/:email', async (req, res) => {
   try {
     const vendor = await Vendor.findOne({ 'userAccountInfo.email': req.params.email });
 
@@ -121,27 +121,23 @@ router.patch('/:email', async (req, res) => {
     const updateObject = {};
 
     if (req.body.personalInfo !== undefined) {
-     updateObject.personalInfo= req.body.personalInfo;
+      updateObject.personalInfo = req.body.personalInfo;
     }
 
-    if (req.body.shopInfo !== undefined) {
-      // Copy shopInfo fields
-      updateObject['shopInfo'] = { ...req.body.shopInfo };
-      
-      // Ensure that updateObject.$inc is defined
-      if (!updateObject.$inc) {
-          updateObject.$inc = {};
-      }
-      
-      // Conditional update for shopBal
-      if (req.body.shopInfo.shopBal !== undefined) {
-          updateObject.$inc['shopInfo.shopBal'] = req.body.shopInfo.shopBal; // Assign new value directly
-      }
-  }
-  
+    if (req.body.shopName !== undefined) {
+      updateObject.shopName = req.body.shopName;
+    }
 
-    if (req.body.userAccountInfo !== undefined) {
-     updateObject.userAccountInfo = req.body.userAccountInfo;
+    if (req.body.school !== undefined) {
+      updateObject.school = req.body.school;
+    }
+
+    if (req.body.contactInfo !== undefined) {
+      updateObject.contactInfo = req.body.contactInfo;
+    }
+
+    if (req.body.shopBal !== undefined) {
+      updateObject.$inc = { 'shopBal': req.body.shopBal};
     }
 
     if (req.body.servicesProvided !== undefined) {
@@ -149,27 +145,27 @@ router.patch('/:email', async (req, res) => {
     }
 
     if (req.body.paymentDetails !== undefined) {
-     updateObject.paymentDetails=req.body.paymentDetails;
+      updateObject.paymentDetails = req.body.paymentDetails;
     }
 
     if (req.body.active !== undefined) {
       vendor.active = req.body.active;
     }
 
-
     const updatedVendor = await Vendor.findOneAndUpdate(
       { 'userAccountInfo.email': req.params.email },
-       updateObject,
+      updateObject,
       { new: true } // Return the updated document
     );
 
-    if (!updatedVendor) return res.status(404).json({ message: 'vendor not found' });
+    if (!updatedVendor) return res.status(404).json({ message: 'Vendor not found' });
     res.json(updatedVendor);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal Server Error', details: err.message });
   }
 });
+
 
 
 

@@ -21,11 +21,10 @@ const vendorSchema = new mongoose.Schema({
       default:''
     },
   },
-  shopInfo:{
     shopName:{
       type:String,
       default:''
-    } ,
+    },
     school:{
       type:String,
       default:''
@@ -38,9 +37,7 @@ const vendorSchema = new mongoose.Schema({
       type: Number,
       default: 0,
       min: 0 ,
-    }
-
-  },
+    },
   userAccountInfo: {
     email: {
       type: String,
@@ -72,15 +69,9 @@ const vendorSchema = new mongoose.Schema({
       enum: ['M-PESA', 'Other'],
       default:null
     },
-    tillHolderName: {
-      type: String,
-      default:''
-
-    },
     tillNumber: {
       type: String,
       default:''
-
     },
 
   },
