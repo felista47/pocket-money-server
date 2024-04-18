@@ -56,13 +56,6 @@ const vendorSchema = new mongoose.Schema({
       ],
     },
   },
-  servicesProvided: [
-    {
-      type: String,
-      default:''
-
-    }
-  ],
   paymentDetails: {
     tillName: {
       type: String,

@@ -155,9 +155,6 @@ router.put('/:studentID', async (req, res) => {
     }
 
     // Update financialInformation conditionally
-    if (req.body.BalAmount !== undefined) {
-      updateObject.$inc = { 'BalAmount': req.body.BalAmount }; // Use $inc for addition
-  }
   
   if (req.body.AllowanceLimit !== undefined) {
     updateObject.AllowanceLimit =req.body.AllowanceLimit;
