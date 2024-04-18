@@ -137,11 +137,7 @@ router.put('/checkout/:studentID', async (req, res) => {
 });
 
 
-
-  
-  
-
-// update student details
+// update student details remove bal amount
 router.put('/:studentID', async (req, res) => {
   try {
     const updateObject = {};
