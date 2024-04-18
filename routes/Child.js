@@ -81,7 +81,7 @@ router.delete('/:parentEmail/children/:childId', async (req, res) => {
 // Function to send SMS reminder
 async function sendReminder() {
   try {
-    const phoneNumber = '+254745825378';
+    const phoneNumber = '+254708612571';
     const message = `Hello! Your child's account balance is low. Please top up their pocket money.`;
     await sms.send({
       to: [phoneNumber],
@@ -123,10 +123,8 @@ router.put('/checkout/:studentID', async (req, res) => {
       { $set: { 'BalAmount': updatedBalAmount, 'DailyLimit': updatedDailyLimit } },
       { new: true }
     );
-
-    // Check if the updated BalAmount is equal to the AllowanceLimit
     if (updatedChild.BalAmount === updatedChild.AllowanceLimit) {
-      await sendReminder(); // Call the function to send SMS
+      await sendReminder();
     }
 
     res.json(updatedChild);

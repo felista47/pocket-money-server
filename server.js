@@ -8,24 +8,25 @@ connectDB();
 // Middleware to parse JSON
 app.use(express.json());
  
-const paymentRoute= require("./routes/paymentRoute")
+const paymentRoute = require("./routes/paymentRoute");
 app.use("/payment", paymentRoute);
 
-const vendorRouter = require('./routes/vendors')
-app.use('/vendor',vendorRouter)
+const vendorRouter = require('./routes/vendors');
+app.use('/vendor', vendorRouter);
 
-const parentRouter = require('./routes/parents')
-app.use('/parent',parentRouter)
+const parentRouter = require('./routes/parents');
+app.use('/parent', parentRouter);
 
-const childRouter = require('./routes/Child')
-app.use('/student',childRouter)
+const childRouter = require('./routes/Child');
+app.use('/student', childRouter);
 
-const productRouter = require('./routes/products')
-app.use('/product',productRouter)
+const productRouter = require('./routes/products');
+app.use('/product', productRouter);
 
-const transactionsRouter = require('./routes/TransactionsRoute')
-app.use('/transactions',transactionsRouter)
+const transactionsRouter = require('./routes/TransactionsRoute');
+app.use('/transactions', transactionsRouter);
 
-const server = app.listen(process.env.PORT || 5000);
-const portNumber = server.address().port;
-console.log(`Server is running on port ${portNumber}`);
+const server = app.listen(process.env.PORT || 5000, () => {
+  const portNumber = server.address().port;
+  console.log(`Server is running on port ${portNumber}`);
+});
