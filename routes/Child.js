@@ -137,7 +137,28 @@ router.put('/checkout/:studentID', async (req, res) => {
 });
 
 
-// update student details remove bal amount
+//update student bal deposit
+router.put('deposit/:studentID', async (req, res) => {
+  try {
+    const updateObject = {};
+if (req.body.BalAmount !== undefined) {
+  updateObject.$inc = { 'BalAmount': req.body.BalAmount }; // Use $inc for addition
+}
+const updatedChild = await Child.findOneAndUpdate(
+  { studentID: req.params.studentID },
+  updateObject,
+  { new: true } // Return the updated document
+);
+
+if (!updatedChild) return res.status(404).json({ message: 'Child not found' });
+res.json(updatedChild);
+} catch (err) {
+console.error(err);
+res.status(500).json({ message: 'Error updating child' });
+}
+});
+
+// update student details
 router.put('/:studentID', async (req, res) => {
   try {
     const updateObject = {};
@@ -151,6 +172,7 @@ router.put('/:studentID', async (req, res) => {
     }
 
     // Update financialInformation conditionally
+
   
   if (req.body.AllowanceLimit !== undefined) {
     updateObject.AllowanceLimit =req.body.AllowanceLimit;
