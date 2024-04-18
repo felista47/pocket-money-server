@@ -138,7 +138,7 @@ router.put('/checkout/:studentID', async (req, res) => {
 
 
 //update student bal deposit
-router.put('deposit/:studentID', async (req, res) => {
+router.put('/deposit/:studentID', async (req, res) => {
   try {
     const updateObject = {};
 if (req.body.BalAmount !== undefined) {
